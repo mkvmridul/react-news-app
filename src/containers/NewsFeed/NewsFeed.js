@@ -1,61 +1,106 @@
-import React,{Component} from 'react';
-import Title from '../../components/Title/Title';
-import ShortDescription from '../../components/ShortDescription/ShortDescription';
-import IMG from '../../components/IMG/IMG';
-import AUX from '../../HOC/Auxiliary/Auxiliary';
-import LongDescription from '../../components/LongDescription/LongDescription';
-import ButtonNews from '../../UI/ButtonNews/ButtonNews';
+import React, { Component } from "react";
+import Title from "../../components/Title/Title";
+import IMG from "../../components/IMG/IMG";
+import AUX from "../../HOC/Auxiliary/Auxiliary";
+import LongDescription from "../../components/LongDescription/LongDescription";
+import propTypes from "prop-types";
 
+class NewsFeed extends Component {
+  state = {
+    longFlag: false,
+    counter: 0,
+    api_contents: this.props.api_contents[0]
+  };
 
-class NewsFeed extends Component{
+  static propTypes = {
+    api_contents: propTypes.array.isRequired
+  };
 
-    
-    state = {
-        contents:{},
-        // id: 0,
-        // title: 'Title',
-        // srcImage: '',
-        // shortContent: 'Hello Brother',
-        // longContent: 'Hello',
-        longFlag: false
-    }
-    
-    componentDidMount() {
-        fetch('https://librarian.onefootball.com/es/homestream')
-            .then(res => res.json())
-            .then((data) => {
-                this.setState({ contents : data })
-            })
-            .catch(console.log)
-    }
+  LongContentHandler = () => {
+    this.setState({
+      longFlag: true
+    });
+  };
+  RemLongContentHandler = () => {
+    this.setState({
+      longFlag: false
+    });
+  };
 
-    LongContentHandler=() => {
-        this.setState({
-            longFlag:true
-        })
+  getSafe = (fn, defaultVal) => {
+    try {
+      return fn();
+    } catch (e) {
+      return defaultVal;
     }
-    RemLongContentHandler=() => {
-            this.setState({
-                longFlag: false
-        })
-    }
-    
+  };
 
-    render() {
-        return (
-            <AUX>
-            <Title>"Hi"</Title>
-            <hr></hr>
-            <IMG 
-            srcImage={this.state.contents} 
-            shortDescription={this.state.shortContent} 
-            clickDetail={this.LongContentHandler}></IMG>
-            <hr></hr>
-            <LongDescription show={this.state.longFlag} clickRem={this.RemLongContentHandler}>{this.state.longContent}</LongDescription>
-            <ButtonNews btnType="Previous" click='hi'>Previous</ButtonNews>
-            <ButtonNews btnType="Next" click='hi'>Next</ButtonNews>
-            </AUX>
-        )
+  incrementCounter = () => {
+    if (this.state.counter < this.props.api_contents.length - 1) {
+      this.setState({
+        counter: this.state.counter + 1
+      });
+    } else {
+      alert("No more News");
     }
+  };
+
+  decrementCounter = () => {
+    if (this.state.counter > 0) {
+      this.setState({
+        counter: this.state.counter - 1
+      });
+    } else {
+      alert("No previous News");
+    }
+  };
+
+  render() {
+    return (
+      <AUX>
+        <Title>
+          {this.getSafe(
+            () => this.props.api_contents[this.state.counter].title,
+            "No Title"
+          )}
+        </Title>
+        <hr></hr>
+        <IMG
+          srcImage={this.getSafe(
+            () => this.props.api_contents[this.state.counter].images.large,
+            "../some_default_image"
+          )}
+          shortDescription={this.getSafe(
+            () =>
+              this.props.api_contents[this.state.counter].content_parts[0]
+                .content,
+            ""
+          )}
+          clickDetail={this.LongContentHandler}
+        ></IMG>
+        <hr></hr>
+        <LongDescription
+          show={this.state.longFlag}
+          clickRem={this.RemLongContentHandler}
+        >
+          {this.getSafe(
+            () => this.props.api_contents[this.state.counter].content,
+            "../some_default_image"
+          )}
+        </LongDescription>
+        <button className="btn btn-dark" onClick={this.decrementCounter}>
+          Previous
+        </button>
+        &nbsp;&nbsp;&nbsp;
+        <button
+          className="btn btn-outline-dark"
+          onClick={this.incrementCounter}
+          counter={this.state.counter}
+        >
+          Next
+        </button>
+      </AUX>
+    );
+  }
 }
 export default NewsFeed;
